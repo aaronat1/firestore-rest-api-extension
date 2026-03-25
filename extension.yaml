@@ -10,6 +10,8 @@ description: >-
 
 license: Apache-2.0
 
+icon: icon.png
+
 sourceUrl: https://github.com/aaronat1/firestore-rest-api-extension
 releaseNotesUrl: https://github.com/aaronat1/firestore-rest-api-extension/blob/main/CHANGELOG.md
 
