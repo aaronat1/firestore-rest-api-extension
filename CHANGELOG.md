@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.1.1
+
+- Fixed: upgraded runtime from nodejs18 to nodejs20 (nodejs18 is decommissioned)
+
 ## Version 0.1.0
 
 **Initial release.**
