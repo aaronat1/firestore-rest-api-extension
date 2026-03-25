@@ -1,5 +1,5 @@
 name: firestore-rest-api
-version: 0.1.3
+version: 0.1.4
 specVersion: v1beta
 
 displayName: Firestore REST API Gateway

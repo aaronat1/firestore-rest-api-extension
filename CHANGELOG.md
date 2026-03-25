@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.1.4
+
+- Add extension icon.
+
 ## Version 0.1.3
 
 - Fixed: UI URL detection now correctly strips /ui suffix when deriving API and Keys endpoints
