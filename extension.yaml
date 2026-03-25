@@ -33,7 +33,7 @@ resources:
       DELETE /{collection}/{id}, DELETE /{collection}?confirm=true.
     properties:
       location: ${LOCATION}
-      runtime: nodejs18
+      runtime: nodejs20
       httpsTrigger: {}
 
   - name: keys
@@ -43,7 +43,7 @@ resources:
       and deleting API keys. The first key created becomes the master key.
     properties:
       location: ${LOCATION}
-      runtime: nodejs18
+      runtime: nodejs20
       httpsTrigger: {}
 
 params:

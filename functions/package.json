@@ -4,7 +4,7 @@
   "description": "Cloud Functions for Firestore REST API Extension",
   "main": "index.js",
   "engines": {
-    "node": "18"
+    "node": "20"
   },
   "scripts": {
     "serve": "firebase emulators:start --only functions,firestore,hosting",
