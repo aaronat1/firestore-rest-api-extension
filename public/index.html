@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Firestore REST API — Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --surface3: #22222f;
+    --border: #2a2a3a;
+    --accent: #ff6b35;
+    --accent2: #7c3aff;
+    --accent3: #00d4aa;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --get: #00d4aa;
+    --post: #7c3aff;
+    --put: #f59e0b;
+    --patch: #3b82f6;
+    --delete: #ef4444;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BG ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,58,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,255,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    z-index: 10;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,.92);
+    backdrop-filter: blur(12px);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo h1 { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+  .logo span { color: var(--accent); }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: rgba(255,107,53,.15);
+    color: var(--accent);
+    border: 1px solid rgba(255,107,53,.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* ── LAYOUT ── */
+  .app {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 64px);
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    background: rgba(17,17,24,.6);
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+
+  .sidebar-section { padding: 0 16px 16px; }
+  .sidebar-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 0 8px;
+    margin-bottom: 8px;
+  }
+
+  .config-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .config-block label {
+    font-size: 11px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    letter-spacing: .5px;
+  }
+
+  input, select {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input:focus, select:focus { border-color: var(--accent2); }
+  input::placeholder { color: var(--muted); }
+
+  .btn {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 7px;
+    border: none;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    margin-top: 6px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #ff8c5a);
+    color: white;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,107,53,.4); }
+  .btn-secondary {
+    background: var(--surface3);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--muted); }
+  .btn-accent2 {
+    background: linear-gradient(135deg, var(--accent2), #9d5cff);
+    color: white;
+  }
+  .btn-accent2:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(124,58,255,.4); }
+
+  .endpoint-nav { margin-top: 8px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    margin: 1px 8px;
+    transition: background .15s;
+    font-size: 13px;
+  }
+  .nav-item:hover { background: var(--surface2); }
+  .nav-item.active { background: rgba(124,58,255,.15); }
+
+  .method-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    min-width: 46px;
+    text-align: center;
+    letter-spacing: .5px;
+  }
+  .GET  { background: rgba(0,212,170,.15); color: var(--get); }
+  .POST { background: rgba(124,58,255,.15); color: var(--accent2); }
+  .PUT  { background: rgba(245,158,11,.15); color: var(--put); }
+  .PATCH { background: rgba(59,130,246,.15); color: var(--patch); }
+  .DELETE { background: rgba(239,68,68,.15); color: var(--delete); }
+
+  /* ── MAIN ── */
+  main {
+    padding: 32px;
+    max-width: 900px;
+  }
+
+  .endpoint-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .endpoint-card:hover { border-color: var(--surface3); }
+
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .endpoint-header:hover { background: rgba(255,255,255,.02); }
+
+  .endpoint-path {
+    font-family: var(--mono);
+    font-size: 14px;
+    flex: 1;
+  }
+
+  .endpoint-desc {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .chevron {
+    color: var(--muted);
+    transition: transform .2s;
+    font-size: 12px;
+  }
+  .endpoint-card.open .chevron { transform: rotate(180deg); }
+
+  .endpoint-body {
+    display: none;
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .endpoint-card.open .endpoint-body { display: block; }
+
+  .params-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .param-group { display: flex; flex-direction: column; gap: 5px; }
+  .param-group label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: .5px;
+  }
+  .param-group .hint {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+  .param-full { grid-column: 1 / -1; }
+
+  textarea {
+    width: 100%;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px;
+    outline: none;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color .2s;
+  }
+  textarea:focus { border-color: var(--accent2); }
+
+  .execute-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    align-items: center;
+  }
+
+  .btn-execute {
+    padding: 10px 24px;
+    border-radius: 7px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent2), #5b21b6);
+    color: white;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-execute:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(124,58,255,.4); }
+  .btn-execute:active { transform: scale(.98); }
+  .btn-execute.loading { opacity: .7; pointer-events: none; }
+
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+  .btn-execute.loading .spinner { display: block; }
+  .btn-execute.loading .exec-icon { display: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .response-block {
+    margin-top: 16px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .response-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .status-ok { background: var(--get); }
+  .status-err { background: var(--delete); }
+
+  .status-code {
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .status-code.ok { color: var(--get); }
+  .status-code.err { color: var(--delete); }
+
+  .response-time { color: var(--muted); margin-left: auto; }
+
+  .response-json {
+    background: #0d0d15;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  /* JSON syntax highlighting */
+  .json-key { color: #7ec8e3; }
+  .json-str { color: #a8e6a3; }
+  .json-num { color: #ffd89b; }
+  .json-bool { color: #ff9ff3; }
+  .json-null { color: var(--muted); }
+
+  /* ── KEY MANAGER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .section-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .info-callout {
+    background: rgba(0,212,170,.08);
+    border: 1px solid rgba(0,212,170,.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--accent3);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .warn-callout {
+    background: rgba(255,107,53,.08);
+    border: 1px solid rgba(255,107,53,.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .key-reveal {
+    background: var(--surface3);
+    border: 1px solid var(--accent3);
+    border-radius: 10px;
+    padding: 16px;
+    margin: 12px 0;
+  }
+  .key-reveal .key-value {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent3);
+    word-break: break-all;
+    margin-bottom: 8px;
+  }
+
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .tab {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all .2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── COPY BTN ── */
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all .2s;
+    width: auto;
+  }
+  .copy-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+  .copy-btn.copied { border-color: var(--accent3); color: var(--accent3); }
+
+  /* ── SCROLL ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 32px; right: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--accent3);
+    color: var(--accent3);
+    font-size: 13px;
+    font-family: var(--mono);
+    padding: 12px 20px;
+    border-radius: 8px;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all .3s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 700px) {
+    .app { grid-template-columns: 1fr; }
+    aside { display: none; }
+    main { padding: 16px; }
+    .params-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🔥</div>
+    <h1>Firestore <span>REST</span> API</h1>
+    <span class="badge">v0.1.0</span>
+  </div>
+  <div style="font-family:var(--mono);font-size:12px;color:var(--muted)">
+    API Gateway Explorer
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Configuration</div>
+      <div class="config-block">
+        <label>🔗 Base URL</label>
+        <input id="baseUrl" type="text" placeholder="https://us-central1-proj.cloudfunctions.net" value="" />
+        <label style="margin-top:8px">🔑 API Key</label>
+        <input id="globalApiKey" type="password" placeholder="frapi_••••••••••••••••" />
+        <label style="margin-top:8px">📁 Collection</label>
+        <input id="globalCollection" type="text" placeholder="users" value="users" />
+        <button class="btn btn-primary" onclick="saveConfig()">Save Config</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Endpoints</div>
+      <nav class="endpoint-nav">
+        <div class="nav-item" onclick="scrollTo('ep-getall')">
+          <span class="method-tag GET">GET</span> GetAll
+        </div>
+        <div class="nav-item" onclick="scrollTo('ep-count')">
+          <span class="method-tag GET">GET</span> Count
+        </div>
+        <div class="nav-item" onclick="scrollTo('ep-getbyid')">
+          <span class="method-tag GET">GET</span> GetById
+        </div>
+        <div class="nav-item" onclick="scrollTo('ep-insert')">
+          <span class="method-tag POST">POST</span> Insert
+        </div>
+        <div class="nav-item" onclick="scrollTo('ep-put')">
+          <span class="method-tag PUT">PUT</span> Update (full)
+        </div>
+        <div class="nav-item" onclick="scrollTo('ep-patch')">
+          <span class="method-tag PATCH">PATCH</span> Update (partial)
+        </div>
+        <div class="nav-item" onclick="scrollTo('ep-delete')">
+          <span class="method-tag DELETE">DELETE</span> Delete
+        </div>
+        <div class="nav-item" onclick="scrollTo('ep-deleteall')">
+          <span class="method-tag DELETE">DELETE</span> DeleteAll
+        </div>
+        <div class="nav-item" onclick="switchTab('keys')">
+          <span style="font-size:13px">🗝️</span> API Keys
+        </div>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main>
+
+    <!-- TABS -->
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('explorer')" id="tab-explorer">Explorer</div>
+      <div class="tab" onclick="switchTab('keys')" id="tab-keys">API Keys</div>
+    </div>
+
+    <!-- ── EXPLORER TAB ── -->
+    <div class="tab-content active" id="tab-content-explorer">
+
+      <!-- GET ALL -->
+      <div class="endpoint-card" id="ep-getall">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method-tag GET">GET</span>
+          <span class="endpoint-path">/{collection}</span>
+          <span class="endpoint-desc">Get all documents with optional filters</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-grid">
+            <div class="param-group">
+              <label>Collection *</label>
+              <input class="col-input" type="text" placeholder="users" />
+            </div>
+            <div class="param-group">
+              <label>Limit</label>
+              <input class="p-limit" type="number" value="20" min="1" max="500" />
+              <span class="hint">max 500</span>
+            </div>
+            <div class="param-group">
+              <label>Order By (field name)</label>
+              <input class="p-orderby" type="text" placeholder="createdAt" />
+            </div>
+            <div class="param-group">
+              <label>Order Direction</label>
+              <select class="p-orderdir">
+                <option value="asc">asc</option>
+                <option value="desc">desc</option>
+              </select>
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="execGetAll(this)">
+              <span class="exec-icon">▶ Execute</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- GET COUNT -->
+      <div class="endpoint-card" id="ep-count">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method-tag GET">GET</span>
+          <span class="endpoint-path">/{collection}/count</span>
+          <span class="endpoint-desc">Get total document count</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-grid">
+            <div class="param-group">
+              <label>Collection *</label>
+              <input class="col-input" type="text" placeholder="users" />
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="execCount(this)">
+              <span class="exec-icon">▶ Execute</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- GET BY ID -->
+      <div class="endpoint-card" id="ep-getbyid">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method-tag GET">GET</span>
+          <span class="endpoint-path">/{collection}/{id}</span>
+          <span class="endpoint-desc">Get a document by ID</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-grid">
+            <div class="param-group">
+              <label>Collection *</label>
+              <input class="col-input" type="text" placeholder="users" />
+            </div>
+            <div class="param-group">
+              <label>Document ID *</label>
+              <input class="p-docid" type="text" placeholder="abc123" />
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="execGetById(this)">
+              <span class="exec-icon">▶ Execute</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- INSERT -->
+      <div class="endpoint-card" id="ep-insert">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method-tag POST">POST</span>
+          <span class="endpoint-path">/{collection}</span>
+          <span class="endpoint-desc">Insert a new document</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-grid">
+            <div class="param-group param-full">
+              <label>Collection *</label>
+              <input class="col-input" type="text" placeholder="users" />
+            </div>
+            <div class="param-group param-full">
+              <label>Body (JSON) *</label>
+              <textarea class="p-body" placeholder='{"name": "Alice", "email": "alice@example.com"}'></textarea>
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="execInsert(this)">
+              <span class="exec-icon">▶ Execute</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- PUT (full update) -->
+      <div class="endpoint-card" id="ep-put">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method-tag PUT">PUT</span>
+          <span class="endpoint-path">/{collection}/{id}</span>
+          <span class="endpoint-desc">Replace a document entirely</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-grid">
+            <div class="param-group">
+              <label>Collection *</label>
+              <input class="col-input" type="text" placeholder="users" />
+            </div>
+            <div class="param-group">
+              <label>Document ID *</label>
+              <input class="p-docid" type="text" placeholder="abc123" />
+            </div>
+            <div class="param-group param-full">
+              <label>Body (JSON) *</label>
+              <textarea class="p-body" placeholder='{"name": "Alice Updated", "email": "alice@example.com"}'></textarea>
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="execPut(this)">
+              <span class="exec-icon">▶ Execute</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- PATCH (partial) -->
+      <div class="endpoint-card" id="ep-patch">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method-tag PATCH">PATCH</span>
+          <span class="endpoint-path">/{collection}/{id}</span>
+          <span class="endpoint-desc">Partially update a document</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-grid">
+            <div class="param-group">
+              <label>Collection *</label>
+              <input class="col-input" type="text" placeholder="users" />
+            </div>
+            <div class="param-group">
+              <label>Document ID *</label>
+              <input class="p-docid" type="text" placeholder="abc123" />
+            </div>
+            <div class="param-group param-full">
+              <label>Fields to update (JSON) *</label>
+              <textarea class="p-body" placeholder='{"name": "New Name"}'></textarea>
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="execPatch(this)">
+              <span class="exec-icon">▶ Execute</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- DELETE ONE -->
+      <div class="endpoint-card" id="ep-delete">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method-tag DELETE">DELETE</span>
+          <span class="endpoint-path">/{collection}/{id}</span>
+          <span class="endpoint-desc">Delete a document by ID</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-grid">
+            <div class="param-group">
+              <label>Collection *</label>
+              <input class="col-input" type="text" placeholder="users" />
+            </div>
+            <div class="param-group">
+              <label>Document ID *</label>
+              <input class="p-docid" type="text" placeholder="abc123" />
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="execDelete(this)">
+              <span class="exec-icon">▶ Execute</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- DELETE ALL -->
+      <div class="endpoint-card" id="ep-deleteall">
+        <div class="endpoint-header" onclick="toggle(this)">
+          <span class="method-tag DELETE">DELETE</span>
+          <span class="endpoint-path">/{collection}?confirm=true</span>
+          <span class="endpoint-desc">Delete ALL documents in a collection</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="warn-callout">
+            ⚠️ <strong>Destructive operation.</strong> This will delete all documents in the collection (up to 500 at a time). You must pass <code>confirm=true</code> as a query parameter.
+          </div>
+          <div class="params-grid">
+            <div class="param-group param-full">
+              <label>Collection *</label>
+              <input class="col-input" type="text" placeholder="users" />
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="execDeleteAll(this)" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
+              <span class="exec-icon">⚠ Execute (Delete All)</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div class="response-area"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── API KEYS TAB ── -->
+    <div class="tab-content" id="tab-content-keys">
+      <div class="section-header">
+        <h2>🗝️ API Key Management</h2>
+      </div>
+
+      <div class="info-callout">
+        <strong>First time?</strong> No master key is needed to generate your first API key — it will automatically become the <strong>Master Key</strong>, which is required to create or manage additional keys. Store it safely.
+      </div>
+
+      <!-- CREATE KEY -->
+      <div class="endpoint-card open">
+        <div class="endpoint-header">
+          <span class="method-tag POST">POST</span>
+          <span class="endpoint-path">/keys</span>
+          <span class="endpoint-desc">Generate a new API key</span>
+        </div>
+        <div class="endpoint-body" style="display:block">
+          <div class="params-grid">
+            <div class="param-group">
+              <label>Key Name</label>
+              <input id="k-name" type="text" placeholder="Production Key" />
+            </div>
+            <div class="param-group">
+              <label>Description</label>
+              <input id="k-desc" type="text" placeholder="Used by backend service" />
+            </div>
+            <div class="param-group param-full">
+              <label>Master API Key (required if keys already exist)</label>
+              <input id="k-master" type="password" placeholder="frapi_••••••••••••••••" />
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="createKey(this)">
+              <span class="exec-icon">▶ Generate Key</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div id="key-result"></div>
+        </div>
+      </div>
+
+      <!-- LIST KEYS -->
+      <div class="endpoint-card open" style="margin-top:16px">
+        <div class="endpoint-header">
+          <span class="method-tag GET">GET</span>
+          <span class="endpoint-path">/keys</span>
+          <span class="endpoint-desc">List all API keys</span>
+        </div>
+        <div class="endpoint-body" style="display:block">
+          <div class="params-grid">
+            <div class="param-group param-full">
+              <label>Master API Key *</label>
+              <input id="k-list-master" type="password" placeholder="frapi_••••••••••••••••" />
+            </div>
+          </div>
+          <div class="execute-row">
+            <button class="btn-execute" onclick="listKeys(this)">
+              <span class="exec-icon">▶ List Keys</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+          <div id="keys-list-result"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let config = {
+  baseUrl: localStorage.getItem('frapi_base') || '',
+  apiKey: localStorage.getItem('frapi_key') || '',
+  collection: localStorage.getItem('frapi_col') || 'users'
+};
+
+function init() {
+  document.getElementById('baseUrl').value = config.baseUrl;
+  document.getElementById('globalApiKey').value = config.apiKey;
+  document.getElementById('globalCollection').value = config.collection;
+  // Fill all col-inputs with saved collection
+  document.querySelectorAll('.col-input').forEach(i => i.value = config.collection);
+}
+
+function saveConfig() {
+  config.baseUrl = document.getElementById('baseUrl').value.replace(/\/$/, '');
+  config.apiKey = document.getElementById('globalApiKey').value;
+  config.collection = document.getElementById('globalCollection').value;
+  localStorage.setItem('frapi_base', config.baseUrl);
+  localStorage.setItem('frapi_key', config.apiKey);
+  localStorage.setItem('frapi_col', config.collection);
+  document.querySelectorAll('.col-input').forEach(i => i.value = config.collection);
+  toast('Config saved ✓');
+}
+
+// ─────────────────────────────────────────────
+// UI HELPERS
+// ─────────────────────────────────────────────
+function toggle(header) {
+  header.parentElement.classList.toggle('open');
+}
+
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById(id)?.classList.add('open');
+  switchTab('explorer');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('tab-content-' + name).classList.add('active');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function setLoading(btn, on) {
+  btn.classList.toggle('loading', on);
+}
+
+// ─────────────────────────────────────────────
+// JSON SYNTAX HIGHLIGHTER
+// ─────────────────────────────────────────────
+function highlight(json) {
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      if (/^"/.test(m)) {
+        return /:$/.test(m)
+          ? `<span class="json-key">${m}</span>`
+          : `<span class="json-str">${m}</span>`;
+      }
+      if (/true|false/.test(m)) return `<span class="json-bool">${m}</span>`;
+      if (/null/.test(m)) return `<span class="json-null">${m}</span>`;
+      return `<span class="json-num">${m}</span>`;
+    });
+}
+
+function renderResponse(container, status, data, ms) {
+  const ok = status >= 200 && status < 300;
+  const json = JSON.stringify(data, null, 2);
+  container.innerHTML = `
+    <div class="response-block">
+      <div class="response-meta">
+        <div class="status-dot ${ok ? 'status-ok' : 'status-err'}"></div>
+        <span class="status-code ${ok ? 'ok' : 'err'}">${status}</span>
+        <span style="color:var(--muted)">${ok ? 'Success' : 'Error'}</span>
+        <button class="copy-btn" onclick="copyText(this, \`${json.replace(/`/g,'\\`')}\`)">copy</button>
+        <span class="response-time">${ms}ms</span>
+      </div>
+      <pre class="response-json">${highlight(json)}</pre>
+    </div>`;
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text);
+  btn.textContent = 'copied!';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+}
+
+// ─────────────────────────────────────────────
+// API CALL HELPER
+// ─────────────────────────────────────────────
+async function apiFetch(path, options = {}) {
+  const url = config.baseUrl + '/api' + path;
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': config.apiKey,
+    ...(options.headers || {})
+  };
+  const start = Date.now();
+  try {
+    const res = await fetch(url, { ...options, headers });
+    const data = await res.json();
+    return { status: res.status, data, ms: Date.now() - start };
+  } catch (e) {
+    return { status: 0, data: { error: e.message }, ms: Date.now() - start };
+  }
+}
+
+async function keysFetch(path, options = {}) {
+  const url = config.baseUrl + '/keys' + path;
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  const start = Date.now();
+  try {
+    const res = await fetch(url, { ...options, headers });
+    const data = await res.json();
+    return { status: res.status, data, ms: Date.now() - start };
+  } catch (e) {
+    return { status: 0, data: { error: e.message }, ms: Date.now() - start };
+  }
+}
+
+// ─────────────────────────────────────────────
+// ENDPOINT EXECUTORS
+// ─────────────────────────────────────────────
+function getCard(btn) { return btn.closest('.endpoint-card'); }
+function getCol(card) { return card.querySelector('.col-input')?.value || config.collection; }
+function getResponseArea(btn) { return btn.closest('.endpoint-card').querySelector('.response-area'); }
+
+async function execGetAll(btn) {
+  const card = getCard(btn);
+  const col = getCol(card);
+  const limit = card.querySelector('.p-limit')?.value || 20;
+  const orderBy = card.querySelector('.p-orderby')?.value || '';
+  const orderDir = card.querySelector('.p-orderdir')?.value || 'asc';
+  let qs = `?limit=${limit}`;
+  if (orderBy) qs += `&orderBy=${orderBy}&orderDir=${orderDir}`;
+  setLoading(btn, true);
+  const r = await apiFetch(`/${col}${qs}`);
+  setLoading(btn, false);
+  renderResponse(getResponseArea(btn), r.status, r.data, r.ms);
+}
+
+async function execCount(btn) {
+  const col = getCol(getCard(btn));
+  setLoading(btn, true);
+  const r = await apiFetch(`/${col}/count`);
+  setLoading(btn, false);
+  renderResponse(getResponseArea(btn), r.status, r.data, r.ms);
+}
+
+async function execGetById(btn) {
+  const card = getCard(btn);
+  const col = getCol(card);
+  const id = card.querySelector('.p-docid')?.value;
+  if (!id) { toast('Document ID is required'); return; }
+  setLoading(btn, true);
+  const r = await apiFetch(`/${col}/${id}`);
+  setLoading(btn, false);
+  renderResponse(getResponseArea(btn), r.status, r.data, r.ms);
+}
+
+async function execInsert(btn) {
+  const card = getCard(btn);
+  const col = getCol(card);
+  let body;
+  try { body = JSON.parse(card.querySelector('.p-body').value); }
+  catch { toast('Invalid JSON in body'); return; }
+  setLoading(btn, true);
+  const r = await apiFetch(`/${col}`, { method: 'POST', body: JSON.stringify(body) });
+  setLoading(btn, false);
+  renderResponse(getResponseArea(btn), r.status, r.data, r.ms);
+}
+
+async function execPut(btn) {
+  const card = getCard(btn);
+  const col = getCol(card);
+  const id = card.querySelector('.p-docid')?.value;
+  if (!id) { toast('Document ID is required'); return; }
+  let body;
+  try { body = JSON.parse(card.querySelector('.p-body').value); }
+  catch { toast('Invalid JSON in body'); return; }
+  setLoading(btn, true);
+  const r = await apiFetch(`/${col}/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+  setLoading(btn, false);
+  renderResponse(getResponseArea(btn), r.status, r.data, r.ms);
+}
+
+async function execPatch(btn) {
+  const card = getCard(btn);
+  const col = getCol(card);
+  const id = card.querySelector('.p-docid')?.value;
+  if (!id) { toast('Document ID is required'); return; }
+  let body;
+  try { body = JSON.parse(card.querySelector('.p-body').value); }
+  catch { toast('Invalid JSON in body'); return; }
+  setLoading(btn, true);
+  const r = await apiFetch(`/${col}/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
+  setLoading(btn, false);
+  renderResponse(getResponseArea(btn), r.status, r.data, r.ms);
+}
+
+async function execDelete(btn) {
+  const card = getCard(btn);
+  const col = getCol(card);
+  const id = card.querySelector('.p-docid')?.value;
+  if (!id) { toast('Document ID is required'); return; }
+  setLoading(btn, true);
+  const r = await apiFetch(`/${col}/${id}`, { method: 'DELETE' });
+  setLoading(btn, false);
+  renderResponse(getResponseArea(btn), r.status, r.data, r.ms);
+}
+
+async function execDeleteAll(btn) {
+  const col = getCol(getCard(btn));
+  if (!confirm(`Delete ALL documents in '${col}'? This cannot be undone.`)) return;
+  setLoading(btn, true);
+  const r = await apiFetch(`/${col}?confirm=true`, { method: 'DELETE' });
+  setLoading(btn, false);
+  renderResponse(getResponseArea(btn), r.status, r.data, r.ms);
+}
+
+// ─────────────────────────────────────────────
+// API KEY MANAGEMENT
+// ─────────────────────────────────────────────
+async function createKey(btn) {
+  const name = document.getElementById('k-name').value;
+  const description = document.getElementById('k-desc').value;
+  const masterKey = document.getElementById('k-master').value;
+  const resultEl = document.getElementById('key-result');
+
+  setLoading(btn, true);
+  const r = await keysFetch('/', {
+    method: 'POST',
+    body: JSON.stringify({ name, description, masterKey })
+  });
+  setLoading(btn, false);
+
+  if (r.status === 201) {
+    const d = r.data;
+    resultEl.innerHTML = `
+      <div class="key-reveal">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700">
+          ${d.isMaster ? '👑 MASTER KEY GENERATED' : '🔑 KEY GENERATED'}
+        </div>
+        <div class="key-value">${d.key}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="copy-btn" onclick="copyText(this, '${d.key}')">copy key</button>
+          <span style="font-size:11px;color:var(--accent)">⚠ Save this now — won't be shown again</span>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+          ID: <code style="font-family:var(--mono)">${d.id}</code> · 
+          Name: <strong>${d.name}</strong>
+        </div>
+      </div>`;
+    // Auto-fill global key if first key
+    if (d.isMaster) {
+      document.getElementById('globalApiKey').value = d.key;
+      document.getElementById('k-list-master').value = d.key;
+      document.getElementById('k-master').value = d.key;
+      config.apiKey = d.key;
+      localStorage.setItem('frapi_key', d.key);
+      toast('Master key set as active key ✓');
+    }
+  } else {
+    resultEl.innerHTML = '';
+    renderResponse(resultEl, r.status, r.data, r.ms);
+    setTimeout(() => {}, 0);
+    resultEl.querySelector = undefined; // don't re-call
+    const rb = document.createElement('div');
+    rb.innerHTML = '';
+    renderResponse(rb, r.status, r.data, r.ms);
+    resultEl.innerHTML = rb.innerHTML;
+  }
+}
+
+async function listKeys(btn) {
+  const masterKey = document.getElementById('k-list-master').value;
+  const resultEl = document.getElementById('keys-list-result');
+  setLoading(btn, true);
+  const r = await keysFetch('/', {
+    headers: { 'x-api-key': masterKey }
+  });
+  setLoading(btn, false);
+
+  if (r.status === 200) {
+    const keys = r.data.keys || [];
+    if (keys.length === 0) {
+      resultEl.innerHTML = `<div class="info-callout" style="margin-top:12px">No keys found.</div>`;
+      return;
+    }
+    resultEl.innerHTML = `
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+        ${keys.map(k => `
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <span style="font-weight:800;font-size:14px">${k.name}</span>
+              ${k.isMaster ? '<span class="badge" style="background:rgba(255,107,53,.15);color:var(--accent)">MASTER</span>' : ''}
+              <span style="font-size:11px;padding:2px 8px;border-radius:4px;${k.active ? 'background:rgba(0,212,170,.15);color:var(--get)' : 'background:rgba(239,68,68,.15);color:var(--delete)'}">${k.active ? 'ACTIVE' : 'INACTIVE'}</span>
+              <span style="margin-left:auto;font-size:11px;color:var(--muted)">Requests: ${k.totalRequests}</span>
+            </div>
+            <div style="font-family:var(--mono);font-size:12px;color:var(--muted)">${k.keyPreview}</div>
+            ${k.description ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${k.description}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>`;
+  } else {
+    renderResponse(resultEl, r.status, r.data, r.ms);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

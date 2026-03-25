@@ -1,0 +1,108 @@
+name: firestore-rest-api
+version: 0.1.0
+specVersion: v1beta
+
+displayName: Firestore REST API Gateway
+description: >-
+  Exposes any Firestore collection as a full REST API with GetAll (limit, orderBy),
+  GetById, GetCount, Insert, Update, Delete, and DeleteAll operations.
+  Includes a Swagger-like UI for testing and API key management.
+
+license: Apache-2.0
+
+sourceUrl: https://github.com/aaronat1/firestore-rest-api-extension
+releaseNotesUrl: https://github.com/aaronat1/firestore-rest-api-extension/blob/main/CHANGELOG.md
+
+author:
+  authorName: aaronat1
+  url: https://github.com/aaronat1
+
+billingRequired: true
+
+roles:
+  - role: datastore.user
+    reason: Needed to read and write documents in Firestore.
+
+resources:
+  - name: api
+    type: firebaseextensions.v1beta.function
+    description: >-
+      Main REST API handler. Exposes Firestore collections via HTTP endpoints:
+      GET /{collection}, GET /{collection}/count, GET /{collection}/{id},
+      POST /{collection}, PUT /{collection}/{id}, PATCH /{collection}/{id},
+      DELETE /{collection}/{id}, DELETE /{collection}?confirm=true.
+    properties:
+      location: ${LOCATION}
+      runtime: nodejs18
+      httpsTrigger: {}
+
+  - name: keys
+    type: firebaseextensions.v1beta.function
+    description: >-
+      API key management handler. Supports creating, listing, activating/deactivating,
+      and deleting API keys. The first key created becomes the master key.
+    properties:
+      location: ${LOCATION}
+      runtime: nodejs18
+      httpsTrigger: {}
+
+params:
+  - param: LOCATION
+    label: Cloud Functions location
+    description: >-
+      Where do you want to deploy the functions?
+      For best performance, choose the region closest to your users.
+    type: select
+    options:
+      - label: Iowa (us-central1)
+        value: us-central1
+      - label: US East (us-east1)
+        value: us-east1
+      - label: South Carolina (us-east4)
+        value: us-east4
+      - label: Belgium (europe-west1)
+        value: europe-west1
+      - label: London (europe-west2)
+        value: europe-west2
+      - label: Frankfurt (europe-west3)
+        value: europe-west3
+      - label: Sydney (australia-southeast1)
+        value: australia-southeast1
+      - label: Tokyo (asia-northeast1)
+        value: asia-northeast1
+      - label: Singapore (asia-southeast1)
+        value: asia-southeast1
+    default: us-central1
+    required: true
+    immutable: true
+
+  - param: ALLOWED_COLLECTIONS
+    label: Allowed collections (optional)
+    description: >-
+      Comma-separated list of Firestore collection names to expose via the API.
+      Example: users,products,orders.
+      Leave empty to allow ALL collections (not recommended for production).
+    type: string
+    required: false
+
+  - param: RATE_LIMIT_PER_MINUTE
+    label: Rate limit (requests per minute per API key)
+    description: >-
+      Maximum number of API requests allowed per minute for each API key.
+      Set to 0 for unlimited.
+    type: select
+    options:
+      - label: "30"
+        value: "30"
+      - label: "60"
+        value: "60"
+      - label: "120"
+        value: "120"
+      - label: "300"
+        value: "300"
+      - label: "600"
+        value: "600"
+      - label: Unlimited
+        value: "0"
+    default: "60"
+    required: true
