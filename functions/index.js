@@ -150,8 +150,8 @@ const apiApp = express();
 apiApp.use(cors({ origin: true }));
 apiApp.use(express.json());
 
-// ── GET / ── Serve UI (no auth required)
-apiApp.get("/", (req, res) => {
+// ── GET / and /ui ── Serve UI (no auth required)
+apiApp.get(["/", "/ui"], (req, res) => {
   res.sendFile(path.join(__dirname, "ui.html"));
 });
 

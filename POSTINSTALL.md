@@ -6,7 +6,7 @@ After installation, your functions are available at:
 
 - **API**: `https://${LOCATION}-${PROJECT_ID}.cloudfunctions.net/ext-firestore-rest-api-api`
 - **Key Manager**: `https://${LOCATION}-${PROJECT_ID}.cloudfunctions.net/ext-firestore-rest-api-keys`
-- **Web UI**: `https://${PROJECT_ID}.web.app` (if Firebase Hosting is deployed)
+- **Web UI**: `https://${LOCATION}-${PROJECT_ID}.cloudfunctions.net/ext-firestore-rest-api-api/ui`
 
 ## Step 1: Generate your first API key
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.1.2
+
+- Fixed: UI now served at /ui path for compatibility with Cloud Functions URL routing
+
 ## Version 0.1.1
 
 - Fixed: upgraded runtime from nodejs18 to nodejs20 (nodejs18 is decommissioned)
