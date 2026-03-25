@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.1.3
+
+- Fixed: UI URL detection now correctly strips /ui suffix when deriving API and Keys endpoints
+
 ## Version 0.1.2
 
 - Fixed: UI now served at /ui path for compatibility with Cloud Functions URL routing

@@ -503,9 +503,13 @@
 <script>
 // ── AUTO-DETECT URLS ──
 function detectApiUrl() {
-  return (window.location.origin + window.location.pathname).replace(/\/$/, '');
+  // Remove /ui suffix if present to get the base api function URL
+  const full = (window.location.origin + window.location.pathname).replace(/\/$/, '');
+  return full.replace(/\/ui$/, '');
 }
 function detectKeysUrl(apiUrl) {
+  // Local emulator:  .../us-central1/api  → .../us-central1/keys
+  // Production:      .../ext-name-api     → .../ext-name-keys
   if (apiUrl.endsWith('/api')) return apiUrl.slice(0, -3) + 'keys';
   return apiUrl.replace(/-api$/, '-keys');
 }
