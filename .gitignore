@@ -1,0 +1,22 @@
+# Firebase
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+database-debug.log
+hosting-debug.log
+functions-debug.log
+.firebase/
+
+# Environment — never commit secrets
+functions/.env
+functions/.env.local
+test-params.env
+
+# Dependencies
+node_modules/
+functions/node_modules/
+
+# OS
+.DS_Store
